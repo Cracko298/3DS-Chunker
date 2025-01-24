@@ -1,6 +1,5 @@
 from tkinter import filedialog, messagebox
 from os import getcwd, system
-from mc3ds.nbt import NBT
 import tkinter as tk
 import subprocess
 import sys
@@ -11,8 +10,10 @@ DEP_LIST = ["dissect.cstruct", "anvil-new", "click", "nbtlib", "p_tqdm"]
 
 def startConversion(worldName:str):
     system(f'py -m mc3ds -c "{folder_path}" -o ".\\output" -b "{BLANK_WORLD_PATH}" -w "{worldName}"')
+    messagebox.showinfo("Notice", "World has been Converted to Java Edition v1.16.0\nUse any version from v1.16-v1.18 to Load it.")
 
 def getWorldName(byteData:bytes):
+    from mc3ds.nbt import NBT
     return str(NBT(byteData).get("LevelName"))
 
 def getWorld():
@@ -25,19 +26,26 @@ def getWorld():
         folder_entry.config(state=tk.DISABLED)
         levelDatPath = f"{folder_path}/level.dat"
 
-def beforeConvert():
+def testModules():
     try: import dissect.cstruct, click, nbtlib, p_tqdm
     except ImportError:
         answer = messagebox.askyesno("Module Notice", "3DS-Chunker needs some modules to opperate.\nMay it install them now?")
         if answer:
             for module in DEP_LIST:system(f'pip install {module}')
         else:sys.exit(1)
+
+def beforeConvert():
+    testModules()
     with open(levelDatPath, 'rb+') as f:
         worldName = getWorldName(f.read())
     startConversion(worldName)
 
+try:from mc3ds.nbt import NBT
+except ModuleNotFoundError: print("success");testModules()
+
+
 root = tk.Tk()
-root.title("MC3DS Chunker - GUI")
+root.title("3DS Chunker (World Converter) - GUI")
 root.geometry("600x200")
 root.resizable(False, False)
 root.config(background='black')
